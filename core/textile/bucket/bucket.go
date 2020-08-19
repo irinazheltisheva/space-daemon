@@ -3,6 +3,7 @@ package bucket
 import (
 	"context"
 	"io"
+	"strings"
 	"sync"
 
 	"github.com/ipfs/interface-go-ipfs-core/path"
@@ -72,4 +73,10 @@ func (b *Bucket) GetData() BucketData {
 
 func (b *Bucket) getContext(ctx context.Context) (context.Context, *thread.ID, error) {
 	return b.getBucketContext(ctx, b.root.Name)
+}
+
+// Cleans path used to access data in buckets
+// removes prefix path if exists.
+func cleanBucketPath(path string) string {
+	return strings.TrimPrefix(path, "/")
 }

@@ -19,6 +19,8 @@ type DirEntryAttribute interface {
 	Name() string       // base name of the file
 	Size() uint64       // length in bytes for files; can be anything for directories
 	Mode() os.FileMode  // file mode bits
+	Uid() string        // user id of owner of entry
+	Gid() string        // group id of owner of entry
 	Ctime() time.Time   // creation time
 	ModTime() time.Time // modification time
 	IsDir() bool

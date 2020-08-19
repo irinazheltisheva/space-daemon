@@ -59,7 +59,8 @@ func (b *Bucket) ListDirectory(ctx context.Context, path string) (*DirEntries, e
 		return nil, err
 	}
 
-	result, err := b.bucketsClient.ListPath(ctx, b.Key(), path)
+	// buckets ListPath requires no prefix /, so trim if exists
+	result, err := b.bucketsClient.ListPath(ctx, b.Key(), cleanBucketPath(path))
 	return (*DirEntries)(result), err
 }
 
@@ -73,5 +74,6 @@ func (b *Bucket) DeleteDirOrFile(ctx context.Context, path string) (path.Resolve
 		return nil, err
 	}
 
-	return b.bucketsClient.RemovePath(ctx, b.Key(), path)
+	// buckets RemovePath requires no prefix /, so trim if exists
+	return b.bucketsClient.RemovePath(ctx, b.Key(), cleanBucketPath(path))
 }

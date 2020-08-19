@@ -52,7 +52,7 @@ func (b *Bucket) UploadFile(ctx context.Context, path string, reader io.Reader) 
 	if err != nil {
 		return nil, nil, err
 	}
-	return b.bucketsClient.PushPath(ctx, b.Key(), path, reader)
+	return b.bucketsClient.PushPath(ctx, b.Key(), cleanBucketPath(path), reader)
 }
 
 // GetFile pulls path from bucket writing it to writer if it's a file.
@@ -65,7 +65,7 @@ func (b *Bucket) GetFile(ctx context.Context, path string, w io.Writer) error {
 		return err
 	}
 
-	if err := b.bucketsClient.PullPath(ctx, b.Key(), path, w); err != nil {
+	if err := b.bucketsClient.PullPath(ctx, b.Key(), cleanBucketPath(path), w); err != nil {
 		log.Error("error in GetFile from textile client", err)
 		return err
 	}
