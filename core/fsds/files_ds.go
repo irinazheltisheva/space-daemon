@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/FleekHQ/space-daemon/core/fsds/files"
+
 	"github.com/FleekHQ/space-daemon/core/space/domain"
 
 	"github.com/FleekHQ/space-daemon/core/space"
@@ -104,15 +106,14 @@ func (f *filesDataSource) GetChildren(ctx context.Context, path string) ([]*DirE
 	return dirEntries, nil
 }
 
-func (f *filesDataSource) Open(ctx context.Context, path string) (ReadSeekCloser, error) {
+func (f *filesDataSource) Open(ctx context.Context, path string) (FileReadWriterCloser, error) {
 	log.Debug("FileDS Open", fmt.Sprintf("path:%s", path))
 	openFileInfo, err := f.service.OpenFile(ctx, path, DefaultBucketName)
 	if err != nil {
 		return nil, err
 	}
 
-	file, err := os.Open(openFileInfo.Location)
-	return file, nil
+	return files.OpenSpaceFilesHandler(f.service, openFileInfo.Location, path, DefaultBucketName)
 }
 
 // Create the entry at the specified path and return a DirEntry representing it.

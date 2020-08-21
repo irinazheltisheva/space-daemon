@@ -30,6 +30,9 @@ var baseDir = NewDirEntryWithMode(
 type SpaceFSDataSource struct {
 	service    space.Service
 	tlfSources []*TLFDataSource
+	// temp cache to speed up node fetching interactions
+	// TODO: handle cache invalidation
+	entryCache map[string]*DirEntry
 }
 
 func NewSpaceFSDataSource(service space.Service, configOptions ...FSDataSourceConfig) *SpaceFSDataSource {
@@ -41,6 +44,7 @@ func NewSpaceFSDataSource(service space.Service, configOptions ...FSDataSourceCo
 	return &SpaceFSDataSource{
 		service:    service,
 		tlfSources: config.tlfSources,
+		entryCache: make(map[string]*DirEntry),
 	}
 }
 
@@ -52,17 +56,25 @@ func (d *SpaceFSDataSource) Get(ctx context.Context, path string) (*DirEntry, er
 		return baseDir, nil
 	}
 
+	// cache get results
+	if entry, exists := d.entryCache[path]; exists {
+		return entry, nil
+	}
+
 	dataSource := d.findTLFDataSource(path)
 	if dataSource == nil {
 		return nil, EntryNotFound
 	}
 
 	result, err := dataSource.Get(ctx, strings.TrimPrefix(path, dataSource.basePath))
-	if result != nil {
-		result.entry.Path = d.prefixBasePath(dataSource.basePath, result.entry.Path)
+	if err != nil {
+		return nil, err
 	}
 
-	return result, err
+	result.entry.Path = d.prefixBasePath(dataSource.basePath, result.entry.Path)
+	d.entryCache[path] = result
+
+	return result, nil
 }
 
 func (d *SpaceFSDataSource) findTLFDataSource(path string) *TLFDataSource {
@@ -93,6 +105,7 @@ func (d *SpaceFSDataSource) GetChildren(ctx context.Context, path string) ([]*Di
 	if result != nil {
 		for _, entry := range result {
 			entry.entry.Path = d.prefixBasePath(dataSource.basePath, entry.entry.Path)
+			d.entryCache[entry.entry.Path] = entry
 		}
 	}
 
@@ -100,7 +113,7 @@ func (d *SpaceFSDataSource) GetChildren(ctx context.Context, path string) ([]*Di
 }
 
 // Open is invoked to read the content of a file
-func (d *SpaceFSDataSource) Open(ctx context.Context, path string) (ReadSeekCloser, error) {
+func (d *SpaceFSDataSource) Open(ctx context.Context, path string) (FileReadWriterCloser, error) {
 	log.Debug("FSDS.Open", "path:"+path)
 	dataSource := d.findTLFDataSource(path)
 	if dataSource == nil {

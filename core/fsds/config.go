@@ -33,9 +33,11 @@ func WithFilesDataSources(service space.Service) FSDataSourceConfig {
 
 var blackListedDirEntryNames = map[string]bool{
 	// OSX specific special directories
-	".Trashes":   true,
-	".localized": true,
-	".fseventsd": true,
+	".Trashes":              true,
+	".localized":            true,
+	".fseventsd":            true,
+	".ql_disablethumbnails": true,
+	".ql_disablecache":      true,
 	// special space empty directory file
 	".keep": true,
 }
