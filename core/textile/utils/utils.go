@@ -36,8 +36,9 @@ func ParseDbIDFromString(dbID string) (*thread.ID, error) {
 
 type DeterministicThreadVariant string
 
-var (
-	MetathreadThreadVariant DeterministicThreadVariant = "metathread"
+const (
+	MetathreadThreadVariant   DeterministicThreadVariant = "metathread"
+	PublicthreadThreadVariant DeterministicThreadVariant = "publicthreadvariant"
 )
 
 func NewDeterministicThreadID(kc keychain.Keychain, threadVariant DeterministicThreadVariant) (thread.ID, error) {

@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/FleekHQ/space-daemon/log"
 	crypto "github.com/libp2p/go-libp2p-crypto"
@@ -86,6 +87,7 @@ func (s *Space) GenerateFileSharingLink(
 	)
 }
 
+// uploads the shared file to ipfs through users public bucket in hub
 func (s *Space) uploadSharedFileToIpfs(
 	ctx context.Context,
 	password string,
@@ -93,11 +95,17 @@ func (s *Space) uploadSharedFileToIpfs(
 	fileName string,
 	bucketName string,
 ) (domain.FileSharingInfo, error) {
-	fileUploadResult := s.ic.AddItem(ctx, sharedContent)
-	if err := fileUploadResult.Error; err != nil {
-		return EmptyFileSharingInfo, errors.Wrap(err, "encrypted file upload failed")
+	b, err := s.tc.GetPublicShareBucket(ctx)
+	if err != nil {
+		return EmptyFileSharingInfo, errors.Wrap(err, "failed to get public files bucket")
 	}
-	encryptedFileHash := fileUploadResult.Resolved.Cid().String()
+
+	uploadResult, _, err := b.UploadFile(ctx, fmt.Sprintf("%s-%d", fileName, time.Now().UnixNano()), sharedContent)
+	if err != nil {
+		return EmptyFileSharingInfo, errors.Wrap(err, "publishing shared file failed")
+	}
+
+	encryptedFileHash := uploadResult.Cid().String()
 
 	urlQuery := url.Values{}
 	urlQuery.Add("fname", fileName)
