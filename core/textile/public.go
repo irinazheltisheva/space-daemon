@@ -103,12 +103,12 @@ func (tc *textileClient) getPublicShareThread(ctx context.Context) (*thread.ID, 
 		return nil, err
 	}
 
-	//dbId, err := tc.getPublicShareThreadID()
-	//if err != nil {
-	//	return nil, err
-	//}
+	dbId, err := tc.getPublicShareThreadID()
+	if err != nil {
+		return nil, err
+	}
 
-	dbId := thread.NewIDV1(thread.Raw, 32)
+	//dbId := thread.NewIDV1(thread.Raw, 32)
 
 	// check if db exists
 	_, err = tc.ht.GetDBInfo(ctx, dbId)
